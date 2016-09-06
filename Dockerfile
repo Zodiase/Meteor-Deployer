@@ -4,7 +4,9 @@ MAINTAINER Xingchen Hong <hello@xc-h.net>
 USER root
 RUN apt-get update && \
     apt-get upgrade -y -q
-RUN apt-get install -y -q build-essential libssl-dev curl
+RUN apt-get install -y -q build-essential \
+                          libssl-dev curl \
+                          python-dev
 
 RUN useradd -m -s /bin/bash meteor
 

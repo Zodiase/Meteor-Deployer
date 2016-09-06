@@ -8,10 +8,11 @@ RUN apt-get install -y -q build-essential \
                           libssl-dev curl \
                           python-dev
 
-RUN useradd -m -s /bin/bash meteor
+ENV USER="meteor"
+ENV HOME="/home/${USER}"
 
-#USER meteor
-ENV HOME="/home/meteor"
+RUN useradd -m -s /bin/bash "${USER}"
+
 WORKDIR "${HOME}"
 
 ##
@@ -41,6 +42,8 @@ COPY .build/bundle "${APP_DIR}"
 #    tar -xf bundle.tar.gz -C "${APP_DIR}" --strip-components 1 && \
 #    rm bundle.tar.gz
 
+USER "${USER}"
+
 # Setup app.
 RUN cd "${APP_DIR}" && \
     (cd programs/server && npm install)
@@ -52,5 +55,4 @@ ENV ROOT_URL="http://localhost" \
     METEOR_SETTINGS='{"public":{}}' \
     PORT=3000
 
-USER meteor
 ENTRYPOINT bash start.sh

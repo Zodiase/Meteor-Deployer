@@ -47,7 +47,7 @@ RUN printf '#!/bin/bash\nnode "%s/main.js"\n' $APP_DIR >> start.sh
 # Meteor Port Config
 ENV ROOT_URL="http://localhost" \
     MONGO_URL="mongodb://localhost" \
-#    METEOR_SETTINGS='{"public":{}}'
+    METEOR_SETTINGS='{"public":{}}'
     PORT=3000
 
 USER meteor

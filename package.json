@@ -1,0 +1,30 @@
+{
+  "name": "@xch/meteor-deployer",
+  "version": "1.0.0",
+  "description": "Deployment tool for Meteor apps.",
+  "main": "index.js",
+  "bin": {
+    "meteord": "./bin/meteord.js"
+  },
+  "scripts": {
+    "lint": "eslint src/*.js src/**/*.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://zodiase@github.com/Zodiase/Meteor-Deployer.git"
+  },
+  "author": "Xingchen Hong",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/Zodiase/Meteor-Deployer/issues"
+  },
+  "homepage": "https://github.com/Zodiase/Meteor-Deployer#readme",
+  "dependencies": {
+    "@xch/node-remote-exec": "0.0.3",
+    "yargs": "^5.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^3.5.0"
+  }
+}

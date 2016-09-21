@@ -12,26 +12,26 @@ module.exports = (yargs, env) => {
   env.checkDeployFiles();
 
   // Read config file.
-  const config = env.loadConfiguration(env.config_file);
+  const config = env.loadConfiguration(env.CONFIG_FILE_PATH);
   const appName = config.appName,
         appContainerName = env.getContainerName(appName);
 
-  const localLogFile = path.join(env.deploy_dir, 'deploy.log');
+  const localLogFile = path.join(env.DEPLOY_DIR_PATH, 'deploy.log');
 
-  env.log(env.LOG_DIVIDER, localLogFile);
+  env.log(env.LOG_DIVIDER_STRING, localLogFile);
   env.log(`New deployment ${Date.now()}`, localLogFile);
 
-  const buildDir = path.join(env.deploy_dir, env.build_dirname),
-        bundleDir = path.join(buildDir, env.bundle_dirname),
-        bundleFile = path.join(buildDir, env.bundle_filename);
+  const buildDir = path.join(env.DEPLOY_DIR_PATH, env.BUILD_DIR_FILENAME),
+        bundleDir = path.join(buildDir, env.BUNDLE_DIR_FILENAME),
+        bundleFile = path.join(buildDir, env.BUNDLE_TARBALL_FILENAME);
   const remoteHome = `/home/${config.server.user}`,
         // Deploy Directory is app specific.
         remoteDeployDir = path.join(remoteHome, 'meteor', appName),
-        remoteSettingsFile = path.join(remoteDeployDir, env.meteor_settings_filename),
+        remoteSettingsFile = path.join(remoteDeployDir, env.APP_SETTINGS_FILENAME),
         remoteLogFile = path.join(remoteDeployDir, 'deploy.log'),
-        remoteBuildDir = path.join(remoteDeployDir, env.build_dirname),
-        remoteBundleFile = path.join(remoteBuildDir, env.bundle_filename),
-        remoteBundleDir = path.join(remoteBuildDir, env.bundle_dirname),
+        remoteBuildDir = path.join(remoteDeployDir, env.BUILD_DIR_FILENAME),
+        remoteBundleFile = path.join(remoteBuildDir, env.BUNDLE_TARBALL_FILENAME),
+        remoteBundleDir = path.join(remoteBuildDir, env.BUNDLE_DIR_FILENAME),
         remoteDockerFile = path.join(remoteDeployDir, 'Dockerfile');
 
   if (env.dirExists(buildDir)) {
@@ -41,7 +41,7 @@ module.exports = (yargs, env) => {
       `rm -rf ${env.escq(buildDir)}`
     ], {
       log: localLogFile,
-      cwd: env.meteor_dir
+      cwd: env.APP_ROOT_PATH
     });
 
   }
@@ -54,7 +54,7 @@ module.exports = (yargs, env) => {
     `rm -rf ${env.escq(bundleDir)}`
   ], {
     log: localLogFile,
-    cwd: env.meteor_dir
+    cwd: env.APP_ROOT_PATH
   });
 
   env.log('Uploading app bundle to remote...', localLogFile, true);
@@ -62,16 +62,16 @@ module.exports = (yargs, env) => {
     `mkdir -p ${env.escq(remoteBundleDir)}`
   ], {
     log: localLogFile,
-    cwd: env.meteor_dir
+    cwd: env.APP_ROOT_PATH
   }));
   env.exec_local([
     // Copy bundle over.
     `scp ${env.escq(bundleFile)} '${config.server.user}@${config.server.host}:${remoteBundleFile}'`,
     // Copy settings file over.
-    `scp ${env.escq(env.settings_file)} '${config.server.user}@${config.server.host}:${remoteSettingsFile}'`
+    `scp ${env.escq(env.APP_SETTINGS_FILE_PATH)} '${config.server.user}@${config.server.host}:${remoteSettingsFile}'`
   ], {
     log: localLogFile,
-    cwd: env.meteor_dir
+    cwd: env.APP_ROOT_PATH
   });
 
   env.log('Remotely building Docker image...', localLogFile, true);
@@ -81,13 +81,13 @@ module.exports = (yargs, env) => {
     // Unpack app bundle.
     `((tar --extract --gzip -m --file ${env.escq(remoteBundleFile)} -C ${env.escq(remoteBundleDir)} --strip-components 1 2>&1 | grep -v "Ignoring unknown extended header keyword") || :)`,
     // Download Dockerfile.
-    `wget --quiet --output-document ${env.escq(remoteDockerFile)} ${env.escq(env.dockerfile_url)}`,
+    `wget --quiet --output-document ${env.escq(remoteDockerFile)} ${env.escq(env.DOCKERFILE_URL)}`,
     // Build app image.
     `docker build -t ${env.escq(appContainerName)} .`
   ], {
     log: localLogFile,
     remoteLog: remoteLogFile,
-    cwd: env.meteor_dir,
+    cwd: env.APP_ROOT_PATH,
     remoteCwd: remoteDeployDir
   }));
 
@@ -100,7 +100,7 @@ module.exports = (yargs, env) => {
   ], {
     log: localLogFile,
     remoteLog: remoteLogFile,
-    cwd: env.meteor_dir,
+    cwd: env.APP_ROOT_PATH,
     remoteCwd: remoteDeployDir
   }));
 
@@ -124,7 +124,7 @@ module.exports = (yargs, env) => {
 //   ], {
 //     log: localLogFile,
 //     remoteLog: remoteLogFile,
-//     cwd: env.meteor_dir,
+//     cwd: env.APP_ROOT_PATH,
 //     remoteCwd: remoteDeployDir
 //   });
 //   console.log(deployResult);

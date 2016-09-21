@@ -11,24 +11,24 @@ module.exports = (yargs, env) => {
 
   /*eslint no-console: "off"*/
 
-  if (!env.dirExists(env.deploy_dir)) {
+  if (!env.dirExists(env.DEPLOY_DIR_PATH)) {
 
     console.log('Creating deployment folder.');
-    fs.mkdirSync(env.deploy_dir);
+    fs.mkdirSync(env.DEPLOY_DIR_PATH);
 
   }
 
-  if (!env.fileExists(env.config_file)) {
+  if (!env.fileExists(env.CONFIG_FILE_PATH)) {
 
     console.log('Creating default config file.');
-    fs.writeFileSync(env.config_file, env.getDefaultConfigFileData(), 'utf8');
+    fs.writeFileSync(env.CONFIG_FILE_PATH, env.getDefaultConfigFileData(), 'utf8');
 
   }
 
-  if (!env.fileExists(env.settings_file)) {
+  if (!env.fileExists(env.APP_SETTINGS_FILE_PATH)) {
 
     console.log('Creating default settings file.');
-    fs.writeFileSync(env.settings_file, env.getDefaultSettingsFileData(), 'utf8');
+    fs.writeFileSync(env.APP_SETTINGS_FILE_PATH, env.getDefaultSettingsFileData(), 'utf8');
 
   }
 

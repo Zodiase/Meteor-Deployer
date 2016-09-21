@@ -2,20 +2,21 @@
 
 'use strict';
 
-const meteor_dirname = '.meteor',
-      meteorid_filename = '.id',
-      default_deploy_dirname = '.deploy',
-      build_dirname = '.build',
-      bundle_dirname = 'bundle',
-      deploy_settings_filename = 'meteord.js',
-      meteor_settings_filename = 'settings.json',
-      bundle_filename = 'bundle.tar.gz',
-      dockerfile_url = 'http://goo.gl/K3ZqKr';
+const METEOR_DIR_FILENAME = '.meteor',
+      METEOR_ID_FILENAME = '.id',
+      DEFAULT_DEPLOY_DIR_FILENAME = '.deploy',
+      BUILD_DIR_FILENAME = '.build',
+      BUNDLE_DIR_FILENAME = 'bundle',
+      DEPLOY_CONFIG_FILENAME = 'meteord.js',
+      APP_SETTINGS_FILENAME = 'settings.json',
+      BUNDLE_TARBALL_FILENAME = 'bundle.tar.gz',
+      DOCKERFILE_URL = 'http://goo.gl/K3ZqKr';
 const LINE_WIDTH = 80,
-      A_FULL_LINE = '-'.repeat(LINE_WIDTH);
+      LOG_DIVIDER_STRING = '-'.repeat(LINE_WIDTH);
 
 // Core packages.
-const path = require('path');
+const path = require('path'),
+      fs = require('fs');
 
 // Yargs setup.
 const yargs = require('yargs')
@@ -28,49 +29,30 @@ const yargs = require('yargs')
           'type': 'string',
           'nargs': 1,
           'describe': 'Directory used for deploy config files.',
-          'default': default_deploy_dirname,
+          'default': DEFAULT_DEPLOY_DIR_FILENAME,
           'normalize': true
         }
       }),
       argv = yargs.argv,
-      scriptPath = argv.$0,
+      SCRIPT_PATH = argv.$0,
       command = argv._[0],
       commands = {};
 
-// Modules.
-const log = require('./helpers/log.js');
-const loadConfiguration = require('./helpers/config-load.js');
-const checkDeployFiles = require('./helpers/deployfiles-check.js');
-const remoteExecSync = require('./helpers/exec-remote.js');
-const exec_local = require('./helpers/exec-local.js');
-const escq = require('./helpers/escape.js');
-const dirExists = require('./helpers/dir-exists.js'),
-      fileExists = require('./helpers/file-exists.js');
+// Helpers.
 
-const mullcmd = require('./helpers/group-multiple-cmds.js');
-
-const getContainerName = (appName) => `meteorapp_${String(appName).toLowerCase()}`;
-
-const checkStatus = (resultObj) => {
-
-  if (resultObj.status !== 0) {
-
-    console.error(resultObj);
-    throw new Error(resultObj.stderr);
-
-  }
-
-};
-
+/**
+ * Return the absolute path of the root of the meteor app.
+ * If the root of the meteor app could not be found, return false.
+ * @param {string} cwd - The current working directly to start checking.
+ * @return {string|false}
+ */
 const getMeteorDir = (cwd) => {
 
   let wd = cwd;
 
   do {
 
-    const meteor_idfile = path.join(wd, meteor_dirname, meteorid_filename);
-
-    if (fileExists(meteor_idfile)) {
+    if (fs.statSync(path.join(wd, METEOR_DIR_FILENAME, METEOR_ID_FILENAME)).isFile()) {
 
       return wd;
 
@@ -84,6 +66,8 @@ const getMeteorDir = (cwd) => {
 
 /**
  * @typedef {Object} CommandRoutineRnvironment
+ * @property {function} getDefaultConfigFileData
+ * @property {function} getDefaultSettingsFileData
  * @property {function} fileExists
  * @property {function} dirExists
  * @property {function} checkDeployFiles
@@ -95,72 +79,107 @@ const getMeteorDir = (cwd) => {
  * @property {function} checkStatus - Throws an error if the execution result has a non-zero status.
  * @property {function} mullcmd - Wrap multiple lines of commands into one.
  * @property {function} log - Logging function.
- * @property {string} scriptPath - Absolute path to this script.
- * @property {string} cwd - Absolute path to the current working directory.
- * @property {string} meteor_dir - Absolute path to the meteor app root directory.
- * @property {string} deploy_dir - Absolute path to the deployment folder.
- * @property {string} config_file - Absolute path to the deployment config file.
- * @property {string} settings_file - Absolute path to the meteor settings file.
+ * @property {string} CWD - Absolute path to the current working directory.
+ * @property {string} SCRIPT_PATH - Absolute path to this script.
+ * @property {string} APP_ROOT_PATH - Absolute path to the meteor app root directory.
+ * @property {string} DEPLOY_DIR_PATH - Absolute path to the deployment folder.
+ * @property {string} CONFIG_FILE_PATH - Absolute path to the deployment config file.
+ * @property {string} APP_SETTINGS_FILE_PATH - Absolute path to the meteor settings file.
+ * @property {string} LOG_DIVIDER_STRING
+ * @property {string} APP_SETTINGS_FILENAME
+ * @property {string} BUILD_DIR_FILENAME
+ * @property {string} BUNDLE_DIR_FILENAME
+ * @property {string} BUNDLE_TARBALL_FILENAME
+ * @property {string} DOCKERFILE_URL
  */
 
+// Load commands.
 commands['init'] = require('./commands/initialize.js');
 commands['stop'] = require('./commands/stop.js');
 commands['start'] = require('./commands/start.js');
 commands['deploy'] = require('./commands/deploy.js');
 
-if (Object.prototype.hasOwnProperty.call(commands, command)) {
-
-  const cwd = process.cwd(),
-        meteor_dir = getMeteorDir(cwd);
-
-  if (!meteor_dir) {
-
-    throw new Error("You're not in a Meteor project directory.");
-
-  }
-
-  const deploy_dir = path.join(meteor_dir, argv.deployDir),
-        config_file = path.join(deploy_dir, deploy_settings_filename),
-        settings_file = path.join(deploy_dir, meteor_settings_filename);
-
-  commands[command](yargs.reset(), {
-    getDefaultConfigFileData: () => {
-
-      return JSON.stringify(require('./default-config.js'), null, 2);
-
-    },
-    getDefaultSettingsFileData: () => {
-
-      return JSON.stringify(require('./default-settings.js'), null, 2);
-
-    },
-    fileExists,
-    dirExists,
-    checkDeployFiles,
-    loadConfiguration,
-    exec_local,
-    getContainerName,
-    meteor_settings_filename,
-    dockerfile_url,
-    remoteExecSync,
-    escq,
-    checkStatus,
-    mullcmd,
-    log,
-    LOG_DIVIDER: A_FULL_LINE,
-    scriptPath,
-    cwd,
-    meteor_dir,
-    deploy_dir,
-    build_dirname,
-    bundle_dirname,
-    bundle_filename,
-    config_file,
-    settings_file
-  });
-
-} else {
+// Show usage info if no valid command is provided.
+if (!Object.prototype.hasOwnProperty.call(commands, command)) {
 
   yargs.showHelp('log');
+  process.exit();
 
 }
+
+// Find the Meteor app root.
+const CWD = process.cwd(),
+      APP_ROOT_PATH = getMeteorDir(CWD);
+
+if (!APP_ROOT_PATH) {
+
+  throw new Error("You're not in a Meteor project directory.");
+
+}
+
+const DEPLOY_DIR_PATH = path.join(APP_ROOT_PATH, argv.deployDir),
+      CONFIG_FILE_PATH = path.join(DEPLOY_DIR_PATH, DEPLOY_CONFIG_FILENAME),
+      APP_SETTINGS_FILE_PATH = path.join(DEPLOY_DIR_PATH, APP_SETTINGS_FILENAME),
+      BREAK_LINE = `\n`;
+
+// Pass control to the command handler.
+commands[command](yargs.reset(), {
+  // Methods.
+  getDefaultConfigFileData: () => JSON.stringify(require('./default-config.js'), null, 2),
+  getDefaultSettingsFileData: () => JSON.stringify(require('./default-settings.js'), null, 2),
+  fileExists: (path) => {
+    try {
+      return fs.statSync(path).isFile();
+    } catch (err) {
+      return false;
+    }
+  },
+  dirExists: (path) => {
+    try {
+      return fs.statSync(path).isDirectory();
+    } catch (err) {
+      return false;
+    }
+  },
+  checkDeployFiles: require('./helpers/deployfiles-check.js'),
+  loadConfiguration: require('./helpers/config-load.js'),
+  exec_local: require('./helpers/exec-local.js'),
+  getContainerName: (appName) => `meteorapp_${String(appName).toLowerCase()}`,
+  remoteExecSync: require('./helpers/exec-remote.js'),
+  escq: require('./helpers/escape.js'),
+  /**
+   * Checks the status code of an execution result.
+   * Throws an error if the status code is not zero.
+   */
+  checkStatus: (resultObj) => {
+
+    if (resultObj.status !== 0) {
+
+      console.error(resultObj);
+      throw new Error(resultObj.stderr);
+
+    }
+
+  },
+  /**
+   * Group multiple lines of commands as one.
+   * @param {string|Array.<string>} cmd - One command string or multiple command strings in an array.
+   * @return {string} - Grouped command string.
+   */
+  mullcmd: (cmd) => `(${(Array.isArray(cmd) ? Array.prototype.slice.call(cmd) : [cmd]).join(BREAK_LINE)})`,
+  log: require('./helpers/log.js'),
+
+  // Constants.
+  CWD,
+  SCRIPT_PATH,
+  APP_ROOT_PATH,
+  DEPLOY_DIR_PATH,
+  CONFIG_FILE_PATH,
+  APP_SETTINGS_FILE_PATH,
+  LOG_DIVIDER_STRING,
+  APP_SETTINGS_FILENAME,
+  BUILD_DIR_FILENAME,
+  BUNDLE_DIR_FILENAME,
+  BUNDLE_TARBALL_FILENAME,
+  DOCKERFILE_URL
+});

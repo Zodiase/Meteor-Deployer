@@ -1,8 +1,5 @@
 'use strict';
 
-const dirExists = require('./dir-exists.js'),
-      fileExists = require('./file-exists.js');
-
 module.exports = function checkDeployFiles (env) {
 
   if (typeof env === 'undefined') {
@@ -11,19 +8,19 @@ module.exports = function checkDeployFiles (env) {
 
   }
 
-  if (!dirExists(env.deploy_dir)) {
+  if (!env.dirExists(env.DEPLOY_DIR_PATH)) {
 
     throw new Error('Deployment folder not found.');
 
   }
 
-  if (!fileExists(env.config_file)) {
+  if (!env.fileExists(env.CONFIG_FILE_PATH)) {
 
     throw new Error('Config file not found.');
 
   }
 
-  if (!fileExists(env.settings_file)) {
+  if (!env.fileExists(env.APP_SETTINGS_FILE_PATH)) {
 
     throw new Error('Settings file not found.');
 

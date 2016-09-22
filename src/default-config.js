@@ -8,7 +8,7 @@ module.exports = {
     env: {
       PORT: 3000,
       ROOT_URL: 'http://localhost',
-      MONGO_URL: 'mongodb://localhost'
+      MONGO_CONTAINER_NAME: 'mongodb'
     }
   }
 };

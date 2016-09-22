@@ -44,9 +44,9 @@ module.exports = (filename) => {
 
   }
 
-  if (!(typeof config.server.env.MONGO_URL === 'string' && config.server.env.MONGO_URL.length > 0)) {
+  if (!(typeof config.server.env.MONGO_CONTAINER_NAME === 'string' && config.server.env.MONGO_CONTAINER_NAME.length > 0 || typeof config.server.env.MONGO_URL === 'string' && config.server.env.MONGO_URL.length > 0)) {
 
-    throw new Error('Expect `server.env.MONGO_URL` to be a non-empty string.');
+    throw new Error('Expect either `server.env.MONGO_CONTAINER_NAME` or `server.env.MONGO_URL` to be a non-empty string.');
 
   }
 

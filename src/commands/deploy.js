@@ -14,7 +14,9 @@ module.exports = (yargs, env) => {
   // Read config file.
   const config = env.loadConfiguration(env.CONFIG_FILE_PATH);
   const appName = config.appName,
-        appContainerName = env.getContainerName(appName);
+        appName_lowerCase = String(appName).toLowerCase(),
+        appContainerName = env.getContainerName(appName),
+        appImageName = appContainerName;
 
   const localLogFile = path.join(env.DEPLOY_DIR_PATH, 'deploy.log');
 
@@ -83,7 +85,7 @@ module.exports = (yargs, env) => {
     // Download Dockerfile.
     `wget --quiet --output-document ${env.escq(remoteDockerFile)} ${env.escq(env.DOCKERFILE_URL)}`,
     // Build app image.
-    `docker build -t ${env.escq(appContainerName)} .`
+    `docker build -t ${env.escq(appImageName)} .`
   ], {
     log: localLogFile,
     remoteLog: remoteLogFile,
@@ -96,7 +98,28 @@ module.exports = (yargs, env) => {
     // Kill and remove existing app container if possible.
     `$(docker rm -f ${env.escq(appContainerName)} >/dev/null 2>&1) || :`,
     // Run the new container.
-    `docker run -d --name ${env.escq(appContainerName)} --env METEOR_SETTINGS="$(<${env.escq(remoteSettingsFile)})" --env MONGO_URL=${env.escq(config.server.env.MONGO_URL)} --env ROOT_URL=${env.escq(config.server.env.ROOT_URL)} --env PORT=3000 -p ${env.escq(config.server.env.PORT)}:3000 --link mongodb:mongodb ${env.escq(appContainerName)}`
+    `docker run -d`
+    // Name the container.
+    + ` --name ${env.escq(appContainerName)}`
+    // Read in the settings file and pass to the app.
+    + ` --env METEOR_SETTINGS="$(<${env.escq(remoteSettingsFile)})"`
+    + (config.server.env.MONGO_URL
+        // Use provided mongodb URL directly.
+        ? ` --env MONGO_URL=${env.escq(config.server.env.MONGO_URL)}`
+        // Using a mongodb container.
+        // The mongodb container is always linked as `mongodb`. Use the app name as the database name.
+        : ` --env MONGO_URL="mongodb://mongodb/${appName_lowerCase}"`
+          // Connect to the mongodb container, map it to host name `mongodb`.
+          + ` --link ${env.escq(config.server.env.MONGO_CONTAINER_NAME)}:mongodb`
+      )
+    // Pass `ROOT_URL` to app.
+    + ` --env ROOT_URL=${env.escq(config.server.env.ROOT_URL)}`
+    // App will always run on Port 3000 of the container.
+    + ` --env PORT=3000`
+    // Map the container port to the specified port on the host.
+    + ` -p ${env.escq(config.server.env.PORT)}:3000`
+    // Name of the image to use.
+    + ` ${env.escq(appImageName)}`
   ], {
     log: localLogFile,
     remoteLog: remoteLogFile,

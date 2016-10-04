@@ -4,7 +4,6 @@
 
 const METEOR_DIR_FILENAME = '.meteor',
       METEOR_ID_FILENAME = '.id',
-      DEFAULT_DEPLOY_DIR_FILENAME = '.deploy',
       BUILD_DIR_FILENAME = '.build',
       BUNDLE_DIR_FILENAME = 'bundle',
       DEPLOY_CONFIG_FILENAME = 'meteord.js',
@@ -23,16 +22,7 @@ const yargs = require('yargs')
       .usage('Usage: $0 <command> [options]')
       .command('help', 'show help')
       .command('init', 'create deploy config files in the Meteor app')
-      .options({
-        'deploy-dir': {
-          'global': true,
-          'type': 'string',
-          'nargs': 1,
-          'describe': 'Directory used for deploy config files.',
-          'default': DEFAULT_DEPLOY_DIR_FILENAME,
-          'normalize': true
-        }
-      }),
+      .options({}),
       argv = yargs.argv,
       SCRIPT_PATH = argv.$0,
       command = argv._[0],
@@ -52,11 +42,15 @@ const getMeteorDir = (cwd) => {
 
   do {
 
-    if (fs.statSync(path.join(wd, METEOR_DIR_FILENAME, METEOR_ID_FILENAME)).isFile()) {
+    try {
 
-      return wd;
+      if (fs.statSync(path.join(wd, METEOR_DIR_FILENAME, METEOR_ID_FILENAME)).isFile()) {
 
-    }
+        return wd;
+
+      }
+
+    } catch (err) {}
 
   } while (wd !== (wd = path.dirname(wd)));
 
@@ -79,7 +73,6 @@ const getMeteorDir = (cwd) => {
  * @property {function} checkStatus - Throws an error if the execution result has a non-zero status.
  * @property {function} mullcmd - Wrap multiple lines of commands into one.
  * @property {function} log - Logging function.
- * @property {string} CWD - Absolute path to the current working directory.
  * @property {string} SCRIPT_PATH - Absolute path to this script.
  * @property {string} APP_ROOT_PATH - Absolute path to the meteor app root directory.
  * @property {string} DEPLOY_DIR_PATH - Absolute path to the deployment folder.
@@ -110,14 +103,16 @@ if (!Object.prototype.hasOwnProperty.call(commands, command)) {
 // Find the Meteor app root.
 const CWD = process.cwd(),
       APP_ROOT_PATH = getMeteorDir(CWD);
+console.log('Current directory:', CWD);
 
 if (!APP_ROOT_PATH) {
 
   throw new Error("You're not in a Meteor project directory.");
 
 }
+console.log('Meteor project directory:', APP_ROOT_PATH);
 
-const DEPLOY_DIR_PATH = path.join(APP_ROOT_PATH, argv.deployDir),
+const DEPLOY_DIR_PATH = CWD,
       CONFIG_FILE_PATH = path.join(DEPLOY_DIR_PATH, DEPLOY_CONFIG_FILENAME),
       APP_SETTINGS_FILE_PATH = path.join(DEPLOY_DIR_PATH, APP_SETTINGS_FILENAME),
       BREAK_LINE = `\n`;
@@ -170,7 +165,6 @@ commands[command](yargs.reset(), {
   log: require('./helpers/log.js'),
 
   // Constants.
-  CWD,
   SCRIPT_PATH,
   APP_ROOT_PATH,
   DEPLOY_DIR_PATH,

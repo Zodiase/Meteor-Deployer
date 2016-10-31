@@ -22,6 +22,10 @@ const yargs = require('yargs')
       .usage('Usage: $0 <command> [options]')
       .command('help', 'show help')
       .command('init', 'create deploy config files in the Meteor app')
+      .command('deploy', 'build and deploy the Meteor app')
+      .command('start', 'start the Meteor app on remote')
+      .command('stop', 'stop the Meteor app on remote')
+      .command('logs', 'fetch logs from the Meteor app on remote')
       .options({}),
       argv = yargs.argv,
       SCRIPT_PATH = argv.$0,

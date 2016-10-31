@@ -17,9 +17,11 @@ module.exports = function log () {
         logFile = args.pop(),
         logString = args.join(', ');
 
-  fs.appendFileSync(logFile, `${logString}\n`, 'utf8');
+  if (logFile) {
+    fs.appendFileSync(logFile, `${logString}\n`, 'utf8');
+  }
 
-  if (toStdOut) {
+  if (!logFile || toStdOut) {
 
     /*eslint no-console: "off"*/
     console.log.apply(console, args);

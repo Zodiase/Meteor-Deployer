@@ -29,6 +29,6 @@ module.exports = (yargs, env) => {
     log: localLogFile
   });
   env.checkStatus(result);
-  env.log(result.stdout);
+  env.log(result.stdout, null);
 
 };

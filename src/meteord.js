@@ -38,7 +38,7 @@ const yargs = require('yargs')
  * Return the absolute path of the root of the meteor app.
  * If the root of the meteor app could not be found, return false.
  * @param {string} cwd - The current working directly to start checking.
- * @return {string|false}
+ * @return {string|false} - The path to the meteor app root. Or false if failed.
  */
 const getMeteorDir = (cwd) => {
 
@@ -54,7 +54,9 @@ const getMeteorDir = (cwd) => {
 
       }
 
-    } catch (err) {}
+    } catch (err) {
+      // Hide errors silently.
+    }
 
   } while (wd !== (wd = path.dirname(wd)));
 
@@ -108,6 +110,7 @@ if (!Object.prototype.hasOwnProperty.call(commands, command)) {
 // Find the Meteor app root.
 const CWD = process.cwd(),
       APP_ROOT_PATH = getMeteorDir(CWD);
+
 console.log('Current directory:', CWD);
 
 if (!APP_ROOT_PATH) {
@@ -127,19 +130,31 @@ commands[command](yargs.reset(), {
   // Methods.
   getDefaultConfigFileData: () => JSON.stringify(require('./default-config.js'), null, 2),
   getDefaultSettingsFileData: () => JSON.stringify(require('./default-settings.js'), null, 2),
-  fileExists: (path) => {
+  fileExists: (somePath) => {
+
     try {
-      return fs.statSync(path).isFile();
+
+      return fs.statSync(somePath).isFile();
+
     } catch (err) {
+
       return false;
+
     }
+
   },
-  dirExists: (path) => {
+  dirExists: (somePath) => {
+
     try {
-      return fs.statSync(path).isDirectory();
+
+      return fs.statSync(somePath).isDirectory();
+
     } catch (err) {
+
       return false;
+
     }
+
   },
   checkDeployFiles: require('./helpers/deployfiles-check.js'),
   loadConfiguration: require('./helpers/config-load.js'),
@@ -147,9 +162,12 @@ commands[command](yargs.reset(), {
   getContainerName: (appName) => `meteorapp_${String(appName).toLowerCase()}`,
   remoteExecSync: require('./helpers/exec-remote.js'),
   escq: require('./helpers/escape.js'),
+
   /**
    * Checks the status code of an execution result.
    * Throws an error if the status code is not zero.
+   * @param {ExecuteResult} resultObj - Execution result from `@xch/node-remote-exec`.
+   * @return {void}
    */
   checkStatus: (resultObj) => {
 
@@ -161,6 +179,7 @@ commands[command](yargs.reset(), {
     }
 
   },
+
   /**
    * Group multiple lines of commands as one.
    * @param {string|Array.<string>} cmd - One command string or multiple command strings in an array.

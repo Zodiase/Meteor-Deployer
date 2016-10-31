@@ -28,6 +28,7 @@ module.exports = (yargs, env) => {
     cwd: env.APP_ROOT_PATH,
     log: localLogFile
   });
+
   env.checkStatus(result);
   env.log(result.stdout, null);
 

@@ -18,7 +18,9 @@ module.exports = function log () {
         logString = args.join(', ');
 
   if (logFile) {
+
     fs.appendFileSync(logFile, `${logString}\n`, 'utf8');
+
   }
 
   if (!logFile || toStdOut) {

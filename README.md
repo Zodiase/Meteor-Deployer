@@ -14,4 +14,7 @@ cd .deploy; meteord init
 
 # Deploy the app.
 meteord deploy
+
+# Get the logs from the app.
+meteord log
 ```

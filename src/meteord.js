@@ -91,7 +91,7 @@ commands['init'] = require('./commands/initialize.js');
 commands['stop'] = require('./commands/stop.js');
 commands['start'] = require('./commands/start.js');
 commands['deploy'] = require('./commands/deploy.js');
-commands['log'] = require('./commands/log.js');
+commands['logs'] = require('./commands/logs.js');
 
 // Show usage info if no valid command is provided.
 if (!Object.prototype.hasOwnProperty.call(commands, command)) {

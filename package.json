@@ -1,6 +1,6 @@
 {
   "name": "@xch/meteor-deployer",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Deployment tool for Meteor apps.",
   "main": "index.js",
   "bin": {

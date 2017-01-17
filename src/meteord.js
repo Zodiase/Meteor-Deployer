@@ -128,7 +128,7 @@ const DEPLOY_DIR_PATH = CWD,
 // Pass control to the command handler.
 commands[command](yargs.reset(), {
   // Methods.
-  getDefaultConfigFileData: () => JSON.stringify(require('./default-config.js'), null, 2),
+  getDefaultConfigFileData: () => fs.readFileSync(path.join(__dirname, 'default-config.js'), 'utf8'),
   getDefaultSettingsFileData: () => JSON.stringify(require('./default-settings.js'), null, 2),
   fileExists: (somePath) => {
 

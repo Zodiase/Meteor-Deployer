@@ -22,9 +22,9 @@
   "homepage": "https://github.com/Zodiase/Meteor-Deployer#readme",
   "dependencies": {
     "@xch/node-remote-exec": "0.0.3",
-    "yargs": "^5.0.0"
+    "yargs": "^8.0.2"
   },
   "devDependencies": {
-    "eslint": "^3.5.0"
+    "eslint": "^4.2.0"
   }
 }

@@ -1,5 +1,7 @@
 # Meteor-Deployer
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/Zodiase/Meteor-Deployer.svg)](https://greenkeeper.io/)
+
 ## Example
 
 ```
